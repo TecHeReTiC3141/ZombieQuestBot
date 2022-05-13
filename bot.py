@@ -12,4 +12,5 @@ bot = Bot('5366480092:AAGkFZjXl47IT9Ltp13UCB3onnXh9zPAEU4')
 disp = Dispatcher(bot, storage=storage)
 
 db = sqlite3.connect('testDB2.db')
+cursor = db.cursor()
 
