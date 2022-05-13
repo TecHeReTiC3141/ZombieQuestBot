@@ -17,13 +17,13 @@ async def start(message: types.Message):
     await message.answer('Хочешь начать квест', reply_markup=keyboard)
 
 
-@disp.callback_query_handler(func=lambda c: c.data == 'start_quest')
+@disp.callback_query_handler(text='start_quest')
 async def start_quest(callback_query: types.CallbackQuery):
 
     await bot.send_message(callback_query.from_user.id, 'Отлично')
 
 
-@disp.callback_query_handler(func=lambda c: c.data == 'miss_quest')
+@disp.callback_query_handler(text='miss_quest')
 async def miss_quest(callback_query: types.CallbackQuery):
 
     await bot.send_message(callback_query.from_user.id, 'Пока')
