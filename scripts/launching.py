@@ -4,8 +4,8 @@ from fsm_content import *
 
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(start, commands='start')
-    dp.register_callback_query_handler(start, commands='start_quest')
-    dp.register_message_handler(start, commands='miss_quest')
+    dp.register_callback_query_handler(start_quest, text='start_quest')
+    dp.register_callback_query_handler(miss_quest, text='miss_quest')
 
 
 async def on_start(_):

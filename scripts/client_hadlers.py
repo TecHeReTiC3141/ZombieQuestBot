@@ -17,13 +17,26 @@ async def start(message: types.Message):
     await message.answer('Хочешь начать квест', reply_markup=keyboard)
 
 
-@disp.callback_query_handler(text='start_quest')
 async def start_quest(callback_query: types.CallbackQuery):
 
+    keyboard = types.InlineKeyboardMarkup()
+    cursor.execute('''SELECT to_id, Refs.text
+                        FROM Event JOIN Refs ON Event.Event_id = Refs.from_id
+                        WHERE Event_id = (SELECT cur_event
+                                          FROM User
+                        WHERE user_id = (?));''', (callback_query.from_user.id, ))
+    events = cursor.fetchall()
+    print(events)
+    for event in events:
+        keyboard.row(types.InlineKeyboardButton(text=event[1], callback_data=f'event {event[0]}'))
+
     await bot.send_message(callback_query.from_user.id, 'Отлично')
+    await bot.send_message(callback_query.from_user.id, 'Начинаем', reply_markup=keyboard)
 
 
-@disp.callback_query_handler(text='miss_quest')
+
+
+
 async def miss_quest(callback_query: types.CallbackQuery):
 
     await bot.send_message(callback_query.from_user.id, 'Пока')

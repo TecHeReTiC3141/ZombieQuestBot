@@ -1,7 +1,7 @@
 from bot import *
 import pandas as pd
 
-data = pd.ExcelFile('data.xlsx')
+data = pd.ExcelFile('..\data.xlsx')
 
 events = pd.read_excel(data, 'Events')
 
