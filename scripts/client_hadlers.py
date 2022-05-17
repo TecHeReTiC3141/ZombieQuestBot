@@ -1,6 +1,6 @@
 import types
 
-from bot import *
+from scripts.bot import *
 
 async def start(message: types.Message):
     try:

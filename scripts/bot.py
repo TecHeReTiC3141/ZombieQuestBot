@@ -11,6 +11,6 @@ bot = Bot('5366480092:AAGkFZjXl47IT9Ltp13UCB3onnXh9zPAEU4')
 
 disp = Dispatcher(bot, storage=storage)
 
-db = sqlite3.connect('testDB2.db')
+db = sqlite3.connect('DB for quest.db')
 cursor = db.cursor()
 
