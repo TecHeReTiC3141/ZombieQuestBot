@@ -1,6 +1,7 @@
 import sqlite3
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, executor
+from aiogram.types import *
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 storage = MemoryStorage()
@@ -11,4 +12,3 @@ disp = Dispatcher(bot, storage=storage)
 
 db = sqlite3.connect('..\DB for quest.db')
 cursor = db.cursor()
-
