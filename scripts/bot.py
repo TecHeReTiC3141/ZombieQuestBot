@@ -1,9 +1,7 @@
-from aiogram import Bot, Dispatcher, types, executor
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from asyncio import sleep
-from datetime import datetime
-import json
 import sqlite3
+
+from aiogram import Bot, Dispatcher
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 storage = MemoryStorage()
 
