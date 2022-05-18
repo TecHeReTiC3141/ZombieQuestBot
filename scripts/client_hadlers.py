@@ -62,7 +62,7 @@ async def go_to_event(query: CallbackQuery):
                             FROM Event
                             WHERE Event_id = (?);''', (event_id,))  # get event
 
-    # TODO !! forbid user to choose previous events
+
 
     text, image, audio = cursor.fetchone()
 
@@ -78,10 +78,12 @@ async def go_to_event(query: CallbackQuery):
                             WHERE user_id = (?));''', (query.from_user.id,)) # getting further events
     keyboard = get_keyboard(cursor.fetchall())
 
+
     await bot.send_message(query.from_user.id, text, reply_markup=keyboard)
     db.commit()
 
     await query.answer()
+    await query.message.delete()
     print(query.data, query.message)
 
 
