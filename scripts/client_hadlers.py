@@ -58,29 +58,37 @@ async def start_quest(callback_query: CallbackQuery):
 # @disp.callback_query_handler(text_startswith="event")
 async def go_to_event(query: CallbackQuery):
     event_id = query.data.split()[1]
-    cursor.execute('''SELECT text, image, audio
+    cursor.execute('''SELECT text, image, audio, death
                             FROM Event
                             WHERE Event_id = (?);''', (event_id,))  # get event
 
 
+    text, image, audio, death = cursor.fetchone()
 
-    text, image, audio = cursor.fetchone()
+    if death:
+        await bot.send_message(query.from_user.id, text)
 
-    cursor.execute('''UPDATE User
-                    SET prev_event = cur_event, cur_event = (?)
-                    WHERE user_id = (?);
-                    ''', (event_id, query.from_user.id))  # updating user event
+        keyboard = InlineKeyboardMarkup()
+        keyboard.row(InlineKeyboardButton(text='Назад', callback_data='return'))
+        await bot.send_message(query.from_user.id, 'Кажется, вы мертвы, вернуться назад?', reply_markup=keyboard)
 
-    cursor.execute('''SELECT to_id, Refs.text
-                            FROM Event JOIN Refs ON Event.Event_id = Refs.from_id
-                            WHERE Event_id = (SELECT cur_event
-                                              FROM User
-                            WHERE user_id = (?));''', (query.from_user.id,)) # getting further events
-    keyboard = get_keyboard(cursor.fetchall())
+    else:
+
+        cursor.execute('''UPDATE User
+                        SET prev_event = cur_event, cur_event = (?)
+                        WHERE user_id = (?);
+                        ''', (event_id, query.from_user.id))  # updating user event
+
+        cursor.execute('''SELECT to_id, Refs.text
+                                FROM Event JOIN Refs ON Event.Event_id = Refs.from_id
+                                WHERE Event_id = (SELECT cur_event
+                                                  FROM User
+                                WHERE user_id = (?));''', (query.from_user.id,)) # getting further events
+        keyboard = get_keyboard(cursor.fetchall())
 
 
-    await bot.send_message(query.from_user.id, text, reply_markup=keyboard)
-    db.commit()
+        await bot.send_message(query.from_user.id, text, reply_markup=keyboard)
+        db.commit()
 
     await query.answer()
     await query.message.delete()
@@ -89,3 +97,37 @@ async def go_to_event(query: CallbackQuery):
 
 async def miss_quest(callback_query: CallbackQuery):
     await bot.send_message(callback_query.from_user.id, 'Пока')
+
+
+async def revive(query: CallbackQuery):
+
+    print((query.from_user.id,))
+    cursor.execute('''SELECT cur_event
+                            FROM User
+                            WHERE user_id = (?)''', (query.from_user.id,))
+
+    event_id = cursor.fetchone()[0]
+
+    cursor.execute('''SELECT text, image, audio, death
+                                FROM Event
+                                WHERE Event_id = (?);''', (event_id,))  # get event
+
+    text, image, audio, death = cursor.fetchone()
+
+    cursor.execute('''UPDATE User
+                            SET prev_event = cur_event, cur_event = (?)
+                            WHERE user_id = (?);
+                            ''', (event_id, query.from_user.id))  # updating user event
+
+    cursor.execute('''SELECT to_id, Refs.text
+                                    FROM Event JOIN Refs ON Event.Event_id = Refs.from_id
+                                    WHERE Event_id = (SELECT cur_event
+                                                      FROM User
+                                    WHERE user_id = (?));''', (query.from_user.id,))  # getting further events
+    keyboard = get_keyboard(cursor.fetchall())
+
+    await bot.send_message(query.from_user.id, text, reply_markup=keyboard)
+    db.commit()
+
+    await query.answer()
+    await query.message.delete()
