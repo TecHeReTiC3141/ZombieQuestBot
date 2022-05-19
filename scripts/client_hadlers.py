@@ -65,6 +65,14 @@ async def go_to_event(query: CallbackQuery):
 
     text, image, audio, death = cursor.fetchone()
 
+    if image:
+        try:
+            with open(f'..\images\{image}', 'rb') as photo:
+                await query.message.reply_photo(photo)
+        except Exception as e:
+            print(e)
+
+
     if death:
         await bot.send_message(query.from_user.id, text)
 
