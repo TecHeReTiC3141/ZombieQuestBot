@@ -24,6 +24,9 @@ async def start(message: Message):
 
 
 async def start_quest(callback_query: CallbackQuery):
+    await bot.send_message(callback_query.from_user.id, '''Какой-то биологический вирус поразил весь наш мир за считанные дни, люди превратились в беспощадных монстров пожирающих обычных людей. Когда всё это только начиналось я отправился в поход совсем один буквально на пару дней чтобы доказать себе, что я смогу выжить в одиночку. Наверное, именно это и спасло мне жизнь ведь сейчас города это рассадники зомби, в которых практически невозможно выжить.
+     С момента моего выхода из глуши и начинается моя история.''')
+
     keyboard = InlineKeyboardMarkup()
 
     cursor.execute('''UPDATE User
@@ -67,7 +70,7 @@ async def go_to_event(query: CallbackQuery):
 
     if image:
         try:
-            with open(f'..\images\{image}', 'rb') as photo:
+            with open(fr'..\images\{image}.jpg', 'rb') as photo:
                 await query.message.reply_photo(photo)
         except Exception as e:
             print(e)
@@ -114,7 +117,7 @@ async def revive(query: CallbackQuery):
                             FROM User
                             WHERE user_id = (?)''', (query.from_user.id,))
 
-    event_id = cursor.fetchone()[0]
+    event_id, = cursor.fetchone()
 
     cursor.execute('''SELECT text, image, audio, death
                                 FROM Event
