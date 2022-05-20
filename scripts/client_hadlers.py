@@ -29,12 +29,12 @@ async def start(message: Message):
                    InlineKeyboardButton(text='Нет', callback_data='miss_quest')])
 
     await message.answer('Приветствую 👋')
-    await message.answer('Хочешь начать квест', reply_markup=keyboard)
+    await message.answer('Хочешь начать квест?', reply_markup=keyboard)
 
 
 async def start_quest(callback_query: CallbackQuery):
     await bot.send_message(callback_query.from_user.id,
-                           'У вас будет 3 жизни. Если они кончаются, то нужно их восстановить для продолжения или начать все заново')
+                           'У вас будет 1 жизнь. Если они кончаются, то нужно их восстановить для продолжения или начать все заново')
     await bot.send_message(callback_query.from_user.id, '''Какой-то биологический вирус поразил весь наш мир за считанные дни, люди превратились в беспощадных монстров пожирающих обычных людей. Когда всё это только начиналось я отправился в поход совсем один буквально на пару дней чтобы доказать себе, что я смогу выжить в одиночку. Наверное, именно это и спасло мне жизнь ведь сейчас города это рассадники зомби, в которых практически невозможно выжить.
      С момента моего выхода из глуши и начинается моя история.''')
 
@@ -70,6 +70,7 @@ async def start_quest(callback_query: CallbackQuery):
 # @disp.callback_query_handler(text_startswith="event")
 async def go_to_event(query: CallbackQuery):
     event_id = query.data.split()[1]
+    print(event_id)
     cursor.execute('''SELECT text, image, audio, death
                             FROM Event
                             WHERE Event_id = (?);''', (event_id,))  # get event
@@ -218,6 +219,7 @@ async def game_with_bot(message: Message):
 
             keyboard.row(InlineKeyboardButton(text='Продолжить', callback_data=f'event {event_id}'))
             await message.answer('Вы угадали!', reply_markup=keyboard)
+
         elif right < guess:
             await message.answer('Загаданное число меньше')
         else:
