@@ -1,4 +1,3 @@
-from scripts.bot import *
 from scripts.game_for_reviving import *
 
 
@@ -84,27 +83,33 @@ async def go_to_event(query: CallbackQuery):
         except Exception as e:
             print(e)
 
-    if death:
+    cursor.execute('''SELECT life 
+                    FROM User
+                    WHERE user_id = (?)''', (query.from_user.id,)) # checking left lives
+    life, = cursor.fetchone()
+
+    if life == 0:
+        keyboard = InlineKeyboardMarkup()
+        keyboard.row(InlineKeyboardButton(text='В самое начало', callback_data='again'))
+        keyboard.row(InlineKeyboardButton(text='Начать игру?', callback_data='request_game'))
+
+        keyboard.row(InlineKeyboardButton(text='Со мной', callback_data='game_with_bot'),
+                     InlineKeyboardButton(text='Со другим игроком', callback_data='game_with_user'))
+        await bot.send_message(query.from_user.id, '''К сожалению, у вас кончились жизни. Чтобы их восстановить, вам нужно сыграть в игру с другим пользователем или со мной
+                        Начать игру?''', reply_markup=keyboard)
+
+    elif death:
         await bot.send_message(query.from_user.id, text)
 
         keyboard = InlineKeyboardMarkup()
-        keyboard.row(InlineKeyboardButton(text='В самое начало', callback_data='again'))
+        keyboard.row(InlineKeyboardButton(text='В самое начало?', callback_data='again'))
 
-        cursor.execute('''SELECT life 
-                        FROM User
-                        WHERE user_id = (?)''', (query.from_user.id,))
-        life, = cursor.fetchone()  # checking left lives
+        keyboard.row(InlineKeyboardButton(text='Начать игру?', callback_data='request_game'))
 
-        if life > 0:
-            keyboard.row(InlineKeyboardButton(text='Назад', callback_data='return'))
-            await bot.send_message(query.from_user.id, 'Кажется, вы мертвы, вернуться назад?', reply_markup=keyboard)
-        else:
-            keyboard.row(InlineKeyboardButton(text='Начать игру', callback_data='request_game'))
-
-            keyboard.row(InlineKeyboardButton(text='Со мной', callback_data='game_with_bot'),
-                         InlineKeyboardButton(text='Со другим игроком', callback_data='game_with_user'))
-            await bot.send_message(query.from_user.id, '''К сожалению, у вас кончились жизни. Чтобы их восстановить, вам нужно сыграть в игру с другим пользователем или со мной
-                Начать игру?''', reply_markup=keyboard)
+        keyboard.row(InlineKeyboardButton(text='Со мной', callback_data='game_with_bot'),
+                     InlineKeyboardButton(text='Со другим игроком', callback_data='game_with_user'))
+        await bot.send_message(query.from_user.id, '''К сожалению, у вас кончились жизни. Чтобы их восстановить, вам нужно сыграть в игру с другим пользователем или со мной
+                               Начать игру?''', reply_markup=keyboard)
 
     else:
         cursor.execute('''UPDATE User
@@ -166,7 +171,60 @@ async def revive(query: CallbackQuery):
 
 async def again(query: CallbackQuery):
     await start_quest(query)
+    await query.message.delete()
+
+async def start_game_with_bot(query: CallbackQuery):
+
+    max_val = random.choice([100, 1000, 5000, 10000])
+
+    cursor.execute('''UPDATE User
+                    SET num_for_game = (?)
+                    WHERE user_id = (?)''', (random.randint(1, max_val), query.from_user.id))
+    await bot.send_message(query.from_user.id, f'''Я загадал случайное число от 1 до {max_val}.
+    Тебе нужно его угадать. Удачи''')
+    await Quest_states.game.set()
+
+    db.commit()
+    await query.message.delete()
 
 
-async def game(message: Message, context: FSMContext):
-    pass
+async def game_with_bot(message: Message):
+
+    try:
+        guess = int(message.text)
+
+        cursor.execute('''SELECT num_for_game
+                            FROM User
+                            Where user_id = (?)''', (message.from_user.id,))
+
+        right, = cursor.fetchone()
+        print(guess, right)
+        if right == guess:
+
+            cursor.execute('''UPDATE User
+                            SET life = 1
+                            WHERE user_id = (?)''', (message.from_user.id,))
+
+            await Quest_states.quest.set()
+
+            keyboard = InlineKeyboardMarkup()
+
+            cursor.execute('''SELECT cur_event
+                                        FROM User
+                                        WHERE user_id = (?)''', (message.from_user.id,))
+
+            event_id, = cursor.fetchone()
+            print(event_id)
+
+            keyboard.row(InlineKeyboardButton(text='Продолжить', callback_data=f'event {event_id}'))
+            await message.answer('Вы угадали!', reply_markup=keyboard)
+        elif right < guess:
+            await message.answer('Загаданное число меньше')
+        else:
+            await message.answer('Загаданное число больше')
+
+    except Exception as e:
+        await message.answer('Пожалуйста, введите число')
+        print(e)
+
+
