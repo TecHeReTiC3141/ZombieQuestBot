@@ -16,7 +16,7 @@ def register_handlers(dp: Dispatcher):
     dp.register_callback_query_handler(go_to_event, text_startswith='event', state='*')
     dp.register_callback_query_handler(revive, text='return', state='*')
     dp.register_callback_query_handler(again, text='again', state='*')
-    dp.register_callback_query_handler(start_game_with_bot, text='game_with_bot')
+    dp.register_callback_query_handler(start_game_with_bot, text='game_with_bot', state='*')
     dp.register_message_handler(game_with_bot, state=Quest_states.game)
 
 

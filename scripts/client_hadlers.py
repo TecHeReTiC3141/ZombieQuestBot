@@ -70,12 +70,6 @@ async def start_quest(callback_query: CallbackQuery):
 # @disp.callback_query_handler(text_startswith="event")
 async def go_to_event(query: CallbackQuery):
     event_id = query.data.split()[1]
-    print(event_id)
-    cursor.execute('''SELECT text, image, audio, death
-                            FROM Event
-                            WHERE Event_id = (?);''', (event_id,))  # get event
-
-    text, image, audio, death = cursor.fetchone()
 
     if event_id == '21':
         cursor.execute('''UPDATE User
@@ -117,7 +111,7 @@ async def go_to_event(query: CallbackQuery):
         else:
             event_id += '2'
 
-    elif event_id == '62':
+    elif event_id == '53':
         cursor.execute('''SELECT stealth
                                 FROM User
                                 WHERE user_id = (?)''', (query.from_user.id,))
@@ -127,10 +121,29 @@ async def go_to_event(query: CallbackQuery):
         else:
             event_id += '2'
 
+    elif event_id == '62':
+        cursor.execute('''SELECT stealth
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        stealth, = cursor.fetchone()
+        if stealth:
+            event_id += '1'
+        else:
+            event_id += '2'
+    print(event_id)
+
+    cursor.execute('''SELECT text, image, audio, death
+                            FROM Event
+                            WHERE Event_id = (?);''', (event_id,))  # get event
+
+    text, image, audio, death = cursor.fetchone()
+
+
+
     if image:
         try:
             with open(fr'..\images\{image}.jpg', 'rb') as photo:
-                await query.message.reply_photo(photo)
+                await query.message.answer_photo(photo)
         except Exception as e:
             print(e)
 
@@ -160,7 +173,7 @@ async def go_to_event(query: CallbackQuery):
         keyboard.row(InlineKeyboardButton(text='Со мной', callback_data='game_with_bot'),
                      InlineKeyboardButton(text='Со другим игроком', callback_data='game_with_user'))
         await bot.send_message(query.from_user.id, '''К сожалению, у вас кончились жизни. Чтобы их восстановить, вам нужно сыграть в игру с другим пользователем или со мной
-                               Начать игру?''', reply_markup=keyboard)
+        Начать игру?''', reply_markup=keyboard)
 
     else:
         cursor.execute('''UPDATE User
