@@ -86,7 +86,7 @@ async def go_to_event(query: CallbackQuery):
 
     cursor.execute('''SELECT life 
                     FROM User
-                    WHERE user_id = (?)''', (query.from_user.id,)) # checking left lives
+                    WHERE user_id = (?)''', (query.from_user.id,))  # checking left lives
     life, = cursor.fetchone()
 
     if life == 0:
@@ -174,8 +174,8 @@ async def again(query: CallbackQuery):
     await start_quest(query)
     await query.message.delete()
 
-async def start_game_with_bot(query: CallbackQuery):
 
+async def start_game_with_bot(query: CallbackQuery):
     max_val = random.choice([100, 1000, 5000, 10000])
 
     cursor.execute('''UPDATE User
@@ -190,7 +190,6 @@ async def start_game_with_bot(query: CallbackQuery):
 
 
 async def game_with_bot(message: Message):
-
     try:
         guess = int(message.text)
 
@@ -228,5 +227,3 @@ async def game_with_bot(message: Message):
     except Exception as e:
         await message.answer('Пожалуйста, введите число')
         print(e)
-
-
