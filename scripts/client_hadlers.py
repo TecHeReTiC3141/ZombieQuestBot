@@ -41,7 +41,7 @@ async def start_quest(callback_query: CallbackQuery):
     keyboard = InlineKeyboardMarkup()
 
     cursor.execute('''UPDATE User
-                        SET prev_event = 0, cur_event = 0, life = 1
+                        SET prev_event = 0, cur_event = 0, life = 1, shooting = false, stealth = false
                         WHERE user_id = (?);
                         ''', (callback_query.from_user.id,))  # erasing user's progress
 
@@ -80,12 +80,52 @@ async def go_to_event(query: CallbackQuery):
     if event_id == '21':
         cursor.execute('''UPDATE User
                         SET shooting = true
-                        WHERE user_id = (?)''', (query.from_user.id))
+                        WHERE user_id = (?)''', (query.from_user.id,))
 
     elif event_id == '23':
         cursor.execute('''UPDATE User
                                 SET stealth = true
-                                WHERE user_id = (?)''', (query.from_user.id))
+                                WHERE user_id = (?)''', (query.from_user.id,))
+
+    elif event_id == '61':
+        cursor.execute('''SELECT shooting
+                        FROM User
+                        WHERE user_id = (?)''', (query.from_user.id,))
+        shooting, = cursor.fetchone()
+        if shooting:
+            event_id += '1'
+        else:
+            event_id += '2'
+
+    elif event_id == '62':
+        cursor.execute('''SELECT stealth
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        stealth, = cursor.fetchone()
+        if stealth:
+            event_id += '1'
+        else:
+            event_id += '2'
+
+    elif event_id == '51':
+        cursor.execute('''SELECT shooting
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        shooting, = cursor.fetchone()
+        if shooting:
+            event_id += '1'
+        else:
+            event_id += '2'
+
+    elif event_id == '62':
+        cursor.execute('''SELECT stealth
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        stealth, = cursor.fetchone()
+        if stealth:
+            event_id += '1'
+        else:
+            event_id += '2'
 
     if image:
         try:
