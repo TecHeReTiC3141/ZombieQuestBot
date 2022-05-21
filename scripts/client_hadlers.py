@@ -34,7 +34,7 @@ async def start(message: Message):
 
 async def start_quest(callback_query: CallbackQuery):
     await bot.send_message(callback_query.from_user.id,
-                           'У вас будет 1 жизнь. Если они кончаются, то нужно их восстановить для продолжения или начать все заново')
+                           'У вас будет 1 жизнь. При смерти нужно поиграть в игру для продолжения или начать все заново')
     await bot.send_message(callback_query.from_user.id, '''Какой-то биологический вирус поразил весь наш мир за считанные дни, люди превратились в беспощадных монстров пожирающих обычных людей. Когда всё это только начиналось я отправился в поход совсем один буквально на пару дней чтобы доказать себе, что я смогу выжить в одиночку. Наверное, именно это и спасло мне жизнь ведь сейчас города это рассадники зомби, в которых практически невозможно выжить.
      С момента моего выхода из глуши и начинается моя история.''')
 
@@ -76,6 +76,16 @@ async def go_to_event(query: CallbackQuery):
                             WHERE Event_id = (?);''', (event_id,))  # get event
 
     text, image, audio, death = cursor.fetchone()
+
+    if event_id == '21':
+        cursor.execute('''UPDATE User
+                        SET shooting = true
+                        WHERE user_id = (?)''', (query.from_user.id))
+
+    elif event_id == '23':
+        cursor.execute('''UPDATE User
+                                SET stealth = true
+                                WHERE user_id = (?)''', (query.from_user.id))
 
     if image:
         try:
@@ -171,6 +181,7 @@ async def revive(query: CallbackQuery):
 
 
 async def again(query: CallbackQuery):
+
     await start_quest(query)
     await query.message.delete()
 
