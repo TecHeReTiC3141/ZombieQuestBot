@@ -29,19 +29,19 @@ async def start(message: Message):
                    InlineKeyboardButton(text='Нет', callback_data='miss_quest')])
 
     await message.answer('Приветствую 👋')
-    await message.answer('Хочешь начать квест', reply_markup=keyboard)
+    await message.answer('Хочешь начать квест?', reply_markup=keyboard)
 
 
 async def start_quest(callback_query: CallbackQuery):
     await bot.send_message(callback_query.from_user.id,
-                           'У вас будет 3 жизни. Если они кончаются, то нужно их восстановить для продолжения или начать все заново')
+                           'У вас будет 1 жизнь. При смерти нужно поиграть в игру для продолжения или начать все заново')
     await bot.send_message(callback_query.from_user.id, '''Какой-то биологический вирус поразил весь наш мир за считанные дни, люди превратились в беспощадных монстров пожирающих обычных людей. Когда всё это только начиналось я отправился в поход совсем один буквально на пару дней чтобы доказать себе, что я смогу выжить в одиночку. Наверное, именно это и спасло мне жизнь ведь сейчас города это рассадники зомби, в которых практически невозможно выжить.
      С момента моего выхода из глуши и начинается моя история.''')
 
     keyboard = InlineKeyboardMarkup()
 
     cursor.execute('''UPDATE User
-                        SET prev_event = 0, cur_event = 0, life = 1
+                        SET prev_event = 0, cur_event = 0, life = 1, shooting = false, stealth = false
                         WHERE user_id = (?);
                         ''', (callback_query.from_user.id,))  # erasing user's progress
 
@@ -70,22 +70,86 @@ async def start_quest(callback_query: CallbackQuery):
 # @disp.callback_query_handler(text_startswith="event")
 async def go_to_event(query: CallbackQuery):
     event_id = query.data.split()[1]
+
+    if event_id == '21':
+        cursor.execute('''UPDATE User
+                        SET shooting = true
+                        WHERE user_id = (?)''', (query.from_user.id,))
+
+    elif event_id == '23':
+        cursor.execute('''UPDATE User
+                                SET stealth = true
+                                WHERE user_id = (?)''', (query.from_user.id,))
+
+    elif event_id == '61':
+        cursor.execute('''SELECT shooting
+                        FROM User
+                        WHERE user_id = (?)''', (query.from_user.id,))
+        shooting, = cursor.fetchone()
+        if shooting:
+            event_id += '1'
+        else:
+            event_id += '2'
+
+    elif event_id == '62':
+        cursor.execute('''SELECT stealth
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        stealth, = cursor.fetchone()
+        if stealth:
+            event_id += '1'
+        else:
+            event_id += '2'
+
+    elif event_id == '51':
+        cursor.execute('''SELECT shooting
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        shooting, = cursor.fetchone()
+        if shooting:
+            event_id += '1'
+        else:
+            event_id += '2'
+
+    elif event_id == '53':
+        cursor.execute('''SELECT stealth
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        stealth, = cursor.fetchone()
+        if stealth:
+            event_id += '1'
+        else:
+            event_id += '2'
+
+    elif event_id == '62':
+        cursor.execute('''SELECT stealth
+                                FROM User
+                                WHERE user_id = (?)''', (query.from_user.id,))
+        stealth, = cursor.fetchone()
+        if stealth:
+            event_id += '1'
+        else:
+            event_id += '2'
+    print(event_id)
+
     cursor.execute('''SELECT text, image, audio, death
                             FROM Event
                             WHERE Event_id = (?);''', (event_id,))  # get event
 
     text, image, audio, death = cursor.fetchone()
 
+
+
     if image:
         try:
             with open(fr'..\images\{image}.jpg', 'rb') as photo:
-                await query.message.reply_photo(photo)
+                await query.message.answer_photo(photo)
         except Exception as e:
             print(e)
 
     cursor.execute('''SELECT life 
                     FROM User
-                    WHERE user_id = (?)''', (query.from_user.id,)) # checking left lives
+                    WHERE user_id = (?)''', (query.from_user.id,))  # checking left lives
     life, = cursor.fetchone()
 
     if life == 0:
@@ -109,7 +173,7 @@ async def go_to_event(query: CallbackQuery):
         keyboard.row(InlineKeyboardButton(text='Со мной', callback_data='game_with_bot'),
                      InlineKeyboardButton(text='Со другим игроком', callback_data='game_with_user'))
         await bot.send_message(query.from_user.id, '''К сожалению, у вас кончились жизни. Чтобы их восстановить, вам нужно сыграть в игру с другим пользователем или со мной
-                               Начать игру?''', reply_markup=keyboard)
+        Начать игру?''', reply_markup=keyboard)
 
     else:
         cursor.execute('''UPDATE User
@@ -170,11 +234,12 @@ async def revive(query: CallbackQuery):
 
 
 async def again(query: CallbackQuery):
+
     await start_quest(query)
     await query.message.delete()
 
-async def start_game_with_bot(query: CallbackQuery):
 
+async def start_game_with_bot(query: CallbackQuery):
     max_val = random.choice([100, 1000, 5000, 10000])
 
     cursor.execute('''UPDATE User
@@ -189,7 +254,6 @@ async def start_game_with_bot(query: CallbackQuery):
 
 
 async def game_with_bot(message: Message):
-
     try:
         guess = int(message.text)
 
@@ -218,6 +282,7 @@ async def game_with_bot(message: Message):
 
             keyboard.row(InlineKeyboardButton(text='Продолжить', callback_data=f'event {event_id}'))
             await message.answer('Вы угадали!', reply_markup=keyboard)
+
         elif right < guess:
             await message.answer('Загаданное число меньше')
         else:
@@ -226,5 +291,3 @@ async def game_with_bot(message: Message):
     except Exception as e:
         await message.answer('Пожалуйста, введите число')
         print(e)
-
-
