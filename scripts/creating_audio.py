@@ -9,14 +9,14 @@ events = cursor.fetchall()
 
 print(*events, sep='\n')
 for id, text in events:
-    path = f'../audio/wavs/{id}.wav'
+    path = f'../audio/voices/{id}.ogg'
 
-    tts = gtts.gTTS(text, lang='ru', )
-    tts.save(path)
+    cursor.execute('''UPDATE Event
+                    SET audio = (?)
+                    WHERE event_id = (?)''', (path, id))
 
-    path_conv = f'../audio/voices/{id}.ogg'
 
-    subprocess.run(['../ffmpeg/bin/ffmpeg.exe', '-i', path, path_conv])
+db.commit()
 
 
 

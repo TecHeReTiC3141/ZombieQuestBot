@@ -147,6 +147,15 @@ async def go_to_event(query: CallbackQuery):
         except Exception as e:
             print(e)
 
+    if audio:
+        try:
+            with open(path, 'rb') as audio:
+                await query.message.answer_voice(audio)
+        except Exception as e:
+            print(e)
+
+
+
     cursor.execute('''SELECT life 
                     FROM User
                     WHERE user_id = (?)''', (query.from_user.id,))  # checking left lives
