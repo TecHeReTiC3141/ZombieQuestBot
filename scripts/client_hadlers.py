@@ -149,12 +149,10 @@ async def go_to_event(query: CallbackQuery):
 
     if audio:
         try:
-            with open(path, 'rb') as audio:
-                await query.message.answer_voice(audio)
+            with open(audio, 'rb') as aud:
+                await query.message.answer_voice(aud)
         except Exception as e:
             print(e)
-
-
 
     cursor.execute('''SELECT life 
                     FROM User
